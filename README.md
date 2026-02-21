@@ -99,11 +99,11 @@ Les instances sont générées aléatoirement avec des coordonnées dans le carr
 
 | Algorithme | Paramètres principaux |
 |---|---|
-| HC Best Improvement | max_evals adaptatif, voisinage swap |
-| HC First Improvement | max_evals adaptatif, voisinage swap |
+| HC Best Improvement | mode best, max_evals adaptatif, voisinage swap |
+| HC First Improvement | mode first, max_evals adaptatif, voisinage swap |
 | Multi-Start HC | 20 départs, HC best, budget dynamique |
 | Recuit Simulé | T0=100, α=0.95, Tmin=0.01, palier=100 |
-| Recherche Tabou | tenure=20, critère d'aspiration activé |
+| Recherche Tabou | tabu_tenure=10, neighborhood swap , critère d'aspiration activé |
 
 **Budget d'évaluations selon la taille de l'instance :**
 
