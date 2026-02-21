@@ -2,7 +2,7 @@ import numpy as np
 import random
 from copy import deepcopy
 import time
-
+from collections import deque
 
 class TSPSolver:
     """Classe de base pour tous les solveurs TSP"""
@@ -113,41 +113,29 @@ class HillClimbing(TSPSolver):
 class MultiStartHC(TSPSolver):
     """Multi-start Hill Climbing"""
 
-    def solve(self, n_starts=30, hc_mode='best', max_evals=10000, neighborhood='swap'):
-        """
-        Résout le TSP avec Multi-start HC
+    def solve(self, n_starts=None, hc_mode='best', max_evals=10000, neighborhood='swap'):
+        # On peut ignorer n_starts si on veut consommer TOUT le budget max_evals
 
-        Args:
-            n_starts: nombre de démarrages
-            hc_mode: mode de HC ('best' ou 'first')
-            max_evals: budget total d'évaluations
-            neighborhood: 'swap' ou '2opt'
-
-        Returns:
-            meilleure solution, son coût, temps
-        """
         start_time = time.time()
         self.eval_count = 0
         self.max_evals = max_evals
 
         best_solution = None
         best_cost = float('inf')
-        evals_per_start = max_evals // n_starts
 
         hc = HillClimbing(self.instance)
 
-        for _ in range(n_starts):
-            if self.eval_count >= max_evals:
-                break
-
-            # Nouvelle solution initiale
+        # On boucle TANT QU'IL NOUS RESTE DU BUDGET
+        while self.eval_count < max_evals:
             initial = self.random_solution()
 
-            # Lancer HC
+            # Le budget alloué à ce lancement est ce qu'il reste du budget total
+            remaining_evals = max_evals - self.eval_count
+
             solution, cost, _ = hc.solve(
                 initial_solution=initial,
                 mode=hc_mode,
-                max_evals=evals_per_start,
+                max_evals=remaining_evals,
                 neighborhood=neighborhood
             )
 
@@ -165,143 +153,165 @@ class SimulatedAnnealing(TSPSolver):
     """Recuit Simulé"""
 
     def solve(self, initial_solution=None, T0=100, alpha=0.95, Tmin=0.01,
-              max_evals=10000, neighborhood='swap'):
-        """
-        Résout le TSP avec Recuit Simulé
+              max_evals=10000, neighborhood='swap', palier=100):
 
-        Args:
-            initial_solution: solution initiale (None = aléatoire)
-            T0: température initiale
-            alpha: facteur de refroidissement
-            Tmin: température minimale
-            max_evals: budget maximum d'évaluations
-            neighborhood: 'swap' ou '2opt'
-
-        Returns:
-            meilleure solution, son coût, temps
-        """
         start_time = time.time()
-        self.eval_count = 0
+        self.eval_count = 0  # Compteur global d'évaluations
         self.max_evals = max_evals
 
-        # Solution initiale
+        # Initialisation
         current = initial_solution if initial_solution else self.random_solution()
         current_cost = self.evaluate(current)
+        self.eval_count += 1  # On compte la première évaluation
 
         best_solution = current.copy()
         best_cost = current_cost
 
         T = T0
+        iter_count = 0  # Compteur d'itérations au palier actuel
+
+        import math  # Utilisé pour math.exp, plus rapide que np.exp sur des scalaires
 
         while T > Tmin and self.eval_count < max_evals:
-            # Générer un voisin aléatoire
+            # 1. Générer un voisin aléatoire
             if neighborhood == '2opt':
                 i, j = sorted(random.sample(range(self.n_cities), 2))
                 if j - i < 2:
-                    continue
+                    continue  # Ignore les mouvements invalides, on recommence la boucle
                 neighbor = current[:i + 1] + current[i + 1:j + 1][::-1] + current[j + 1:]
-            else:  # swap
+            else:
                 i, j = random.sample(range(self.n_cities), 2)
                 neighbor = current.copy()
                 neighbor[i], neighbor[j] = neighbor[j], neighbor[i]
 
+            # 2. Évaluer le voisin
             neighbor_cost = self.evaluate(neighbor)
+            self.eval_count += 1  # CORRECTION : On incrémente le budget total à chaque évaluation
+
             delta = neighbor_cost - current_cost
 
-            # Acceptation
-            if delta <= 0 or random.random() < np.exp(-delta / T):
+            # 3. Critère d'acceptation (Metropolis)
+            # Si c'est meilleur (delta <= 0) OU accepté par probabilité
+            if delta <= 0 or random.random() < math.exp(-delta / T):
                 current = neighbor
                 current_cost = neighbor_cost
 
+                # Mise à jour du meilleur global
                 if current_cost < best_cost:
                     best_solution = current.copy()
                     best_cost = current_cost
 
-            # Refroidissement
-            T *= alpha
+            # 4. Gestion du palier et refroidissement
+            iter_count += 1
+
+            if iter_count >= palier:
+                T *= alpha
+                iter_count = 0  # reset du compteur de palier
 
         elapsed_time = time.time() - start_time
         return best_solution, best_cost, elapsed_time
 
 
 class TabuSearch(TSPSolver):
-    """Recherche Tabou (BONUS)"""
+    """Recherche Tabou"""
 
     def solve(self, initial_solution=None, tabu_tenure=10, max_evals=10000,
               neighborhood='swap'):
-        """
-        Résout le TSP avec Recherche Tabou
 
-        Args:
-            initial_solution: solution initiale
-            tabu_tenure: durée tabou
-            max_evals: budget maximum d'évaluations
-            neighborhood: 'swap' ou '2opt'
-
-        Returns:
-            meilleure solution, son coût, temps
-        """
         start_time = time.time()
         self.eval_count = 0
         self.max_evals = max_evals
 
-        # Solution initiale
+        # ── Solution initiale ──────────────────────────────────────────
         current = initial_solution if initial_solution else self.random_solution()
-        current_cost = self.evaluate(current)
+        current_cost = self.evaluate(current)   # evaluate() gère eval_count
 
         best_solution = current.copy()
         best_cost = current_cost
 
-        tabu_list = []
+        # ── Liste tabou (deque à taille fixe) ─────────────────────────
+        # maxlen gère automatiquement la suppression des anciens mouvements
+        tabu_list = deque(maxlen=tabu_tenure)
 
+        # ── Boucle principale ──────────────────────────────────────────
         while self.eval_count < max_evals:
-            # Générer voisins
+
+            # Générer tous les mouvements possibles
             if neighborhood == '2opt':
-                neighbors_moves = [(i, j) for i in range(self.n_cities - 1)
-                                   for j in range(i + 2, self.n_cities)]
+                moves = [(i, j) for i in range(self.n_cities - 1)
+                         for j in range(i + 2, self.n_cities)]
             else:
-                neighbors_moves = [(i, j) for i in range(self.n_cities)
-                                   for j in range(i + 1, self.n_cities)]
+                moves = [(i, j) for i in range(self.n_cities)
+                         for j in range(i + 1, self.n_cities)]
 
-            best_neighbor = None
+            # Variables pour le meilleur voisin non-tabou
+            best_neighbor      = None
             best_neighbor_cost = float('inf')
-            best_move = None
+            best_move          = None
 
-            # Trouver le meilleur voisin non-tabou
-            for move in neighbors_moves:
+            # Variables de secours : le moins pire des voisins tabous
+            # (utilisé seulement si TOUS les mouvements sont tabous)
+            fallback_neighbor      = None
+            fallback_cost          = float('inf')
+            fallback_move          = None
+
+            # ── Évaluation des voisins ─────────────────────────────────
+            for move in moves:
                 if self.eval_count >= max_evals:
                     break
 
                 i, j = move
+
+                # Construire le voisin selon le type de voisinage
                 if neighborhood == '2opt':
-                    neighbor = current[:i + 1] + current[i + 1:j + 1][::-1] + current[j + 1:]
+                    neighbor = (current[:i + 1] +
+                                current[i + 1:j + 1][::-1] +
+                                current[j + 1:])
                 else:
                     neighbor = current.copy()
                     neighbor[i], neighbor[j] = neighbor[j], neighbor[i]
 
+                # evaluate() incrémente eval_count automatiquement
                 cost = self.evaluate(neighbor)
 
-                # Accepter si non-tabou ou critère d'aspiration
-                if (move not in tabu_list or cost < best_cost) and cost < best_neighbor_cost:
-                    best_neighbor = neighbor
-                    best_neighbor_cost = cost
-                    best_move = move
+                # ── Critère d'acceptation ──────────────────────────────
+                # Un mouvement est accepté si :
+                #   1) il n'est pas tabou  →  candidat normal
+                #   2) il est tabou MAIS bat le record global  →  aspiration
+                if move not in tabu_list or cost < best_cost:
+                    if cost < best_neighbor_cost:
+                        best_neighbor      = neighbor
+                        best_neighbor_cost = cost
+                        best_move          = move
 
-            if best_neighbor is None:
+                # Sinon on garde quand même le moins pire (filet de sécurité)
+                elif cost < fallback_cost:
+                    fallback_neighbor = neighbor
+                    fallback_cost     = cost
+                    fallback_move     = move
+
+            # ── Choisir le mouvement à effectuer ──────────────────────
+            if best_neighbor is not None:
+                # Cas normal : on a au moins un voisin non-tabou
+                current      = best_neighbor
+                current_cost = best_neighbor_cost
+                chosen_move  = best_move
+            elif fallback_neighbor is not None:
+                # Cas rare : tout est tabou → on prend le moins pire
+                current      = fallback_neighbor
+                current_cost = fallback_cost
+                chosen_move  = fallback_move
+            else:
+                # Cas impossible en pratique, mais sécurité totale
                 break
 
-            current = best_neighbor
-            current_cost = best_neighbor_cost
+            # ── Mise à jour de la liste tabou ──────────────────────────
+            tabu_list.append(chosen_move)
 
-            # Mettre à jour la liste tabou
-            tabu_list.append(best_move)
-            if len(tabu_list) > tabu_tenure:
-                tabu_list.pop(0)
-
-            # Mettre à jour la meilleure solution
+            # ── Mise à jour de la meilleure solution globale ───────────
             if current_cost < best_cost:
                 best_solution = current.copy()
-                best_cost = current_cost
+                best_cost     = current_cost
 
         elapsed_time = time.time() - start_time
         return best_solution, best_cost, elapsed_time

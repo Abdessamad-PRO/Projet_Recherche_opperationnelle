@@ -242,7 +242,7 @@ def run_complete_experiment():
         runner.run_algorithm(
             'Simulated-Annealing',
             SimulatedAnnealing,
-            {'T0': 100, 'alpha': 0.95, 'Tmin': 0.01, 'max_evals': max_evals, 'neighborhood': 'swap'},
+            {'T0': 100, 'alpha': 0.95, 'Tmin': 0.01, 'max_evals': max_evals, 'neighborhood': 'swap', 'palier': 100},
             n_runs=n_runs
         )
 
@@ -250,7 +250,7 @@ def run_complete_experiment():
         runner.run_algorithm(
             'Tabu-Search',
             TabuSearch,
-            {'tabu_tenure': 20, 'max_evals': max_evals, 'neighborhood': 'swap'},
+            {'tabu_tenure': 10, 'max_evals': max_evals, 'neighborhood': 'swap'},
             n_runs=n_runs
         )
 
