@@ -6,9 +6,11 @@
   <component name="ChangeListManager">
     <list default="true" id="f2b30453-f9f5-4021-8e62-0790a09c82e5" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ExperimentRunner.py" beforeDir="false" afterPath="$PROJECT_DIR$/ExperimentRunner.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/algorithms.py" beforeDir="false" afterPath="$PROJECT_DIR$/algorithms.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/instance_A_20.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/instance_A_20.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/instance_B_50.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/instance_B_50.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/instance_C_80.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/instance_C_80.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/results/instance_20/barplot_20.png" beforeDir="false" afterPath="$PROJECT_DIR$/results/instance_20/barplot_20.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/results/instance_20/best_tour_20.png" beforeDir="false" afterPath="$PROJECT_DIR$/results/instance_20/best_tour_20.png" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/results/instance_20/boxplot_20.png" beforeDir="false" afterPath="$PROJECT_DIR$/results/instance_20/boxplot_20.png" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/results/instance_50/barplot_50.png" beforeDir="false" afterPath="$PROJECT_DIR$/results/instance_50/barplot_50.png" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/results/instance_50/best_tour_50.png" beforeDir="false" afterPath="$PROJECT_DIR$/results/instance_50/best_tour_50.png" afterDir="false" />
@@ -19,6 +21,7 @@
       <change beforePath="$PROJECT_DIR$/results/results_20.json" beforeDir="false" afterPath="$PROJECT_DIR$/results/results_20.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/results/results_50.json" beforeDir="false" afterPath="$PROJECT_DIR$/results/results_50.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/results/results_80.json" beforeDir="false" afterPath="$PROJECT_DIR$/results/results_80.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tsp_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/tsp_model.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

@@ -33,7 +33,7 @@ class TSPInstance:
         for i in range(n):
             for j in range(i + 1, n):
                 d = np.sqrt(np.sum((self.coords[i] - self.coords[j]) ** 2))
-                dist[i, j] = dist[j, i] = round(d, 2)
+                dist[i, j] = dist[j, i] = round(d)
 
         return dist
 
