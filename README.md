@@ -139,9 +139,4 @@ Pour chaque algorithme et chaque instance, les métriques suivantes sont calcul�
 ## Auteurs
 
 Projet réalisé dans le cadre du module **Optimisation / Métaheuristiques**  
-Par: 
--AIT EL MAHJOUB ABDESSAMAD.
--EL MAKAOUI ACHRAF.
--IDHAMIDE ABOUBAKER.
-<\br>
 ENSET Mohammedia — Année universitaire 2025-2026
